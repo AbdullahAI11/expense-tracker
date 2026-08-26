@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:expense_tracker/app/theme/app_theme.dart';
 import 'package:expense_tracker/features/expenses/screens/home_screen.dart';
 
 class ExpenseTrackerApp extends StatelessWidget {
@@ -7,6 +8,11 @@ class ExpenseTrackerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: HomeScreen());
+    return MaterialApp(
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
+      home: const HomeScreen(),
+    );
   }
 }

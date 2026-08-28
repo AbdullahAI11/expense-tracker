@@ -81,7 +81,7 @@ class ExpenseItem extends StatelessWidget {
     switch (category.toLowerCase()) {
       case 'food':
         return Icons.lunch_dining;
-      case 'cinema':
+      case 'leisure':
         return Icons.movie;
       case 'travel':
         return Icons.flight_takeoff;

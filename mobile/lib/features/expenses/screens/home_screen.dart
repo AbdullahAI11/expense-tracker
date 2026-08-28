@@ -1,14 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:expense_tracker/features/expenses/models/expense.dart';
 import 'package:expense_tracker/features/expenses/screens/add_expense_screen.dart';
+import 'package:expense_tracker/features/expenses/state/expenses_controller.dart';
+import 'package:expense_tracker/features/expenses/widgets/home_screen/expense_list.dart';
+import 'package:expense_tracker/features/expenses/widgets/home_screen/spending_chart.dart';
 
-import 'package:expense_tracker/features/expenses/widgets/spending_chart.dart';
-
-import 'package:expense_tracker/features/expenses/widgets/expense_list.dart';
-
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _expensesController = ExpensesController();
+
+  @override
+  void dispose() {
+    _expensesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addExpense() async {
+    final expense = await Navigator.of(context).push<Expense>(
+      MaterialPageRoute(
+        builder: (_) => const AddExpenseScreen(),
+      ),
+    );
+
+    if (expense != null) {
+      _expensesController.addExpense(expense);
+    }
+  }
+
+  void _deleteExpense(Expense expense, int index) {
+    final removedExpense = _expensesController.removeExpenseAt(index);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: isDark
+            ? const Color(0xFF1E1E1E)
+            : const Color(0xFF17004A),
+        content: const Text(
+          'Expense deleted',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        duration: const Duration(seconds: 4),
+        persist: false,
+        action: SnackBarAction(
+          label: 'UNDO',
+          textColor: const Color(0xFFDDC8FA),
+          onPressed: () {
+            _expensesController.insertExpense(index, removedExpense);
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,31 +88,48 @@ class HomeScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
-              );
-            },
-            icon: const Icon(Icons.add, color: Colors.white, size: 28),
+            onPressed: _addExpense,
+            icon: const Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 28,
+            ),
           ),
         ],
       ),
-      body: const Padding(
-        padding: EdgeInsets.only(
+      body: Padding(
+        padding: const EdgeInsets.only(
           top: 16,
           left: 16,
           right: 16,
         ),
-        child: Column(
-          children: [
-            SpendingChart(),
-            SizedBox(height: 30),
-            Expanded(
-              child: ExpenseList(
-                expenses: [],
-              ),
-            ),
-          ],
+        child: ListenableBuilder(
+          listenable: _expensesController,
+          builder: (context, child) {
+            final expenses = _expensesController.expenses;
+
+            return Column(
+              children: [
+                SpendingChart(expenses: expenses),
+                const SizedBox(height: 30),
+                Expanded(
+                  child: expenses.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No expenses yet',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        )
+                      : ExpenseList(
+                          expenses: expenses,
+                          onDismissed: _deleteExpense,
+                        ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

@@ -14,11 +14,11 @@ class SpendingChart extends StatelessWidget {
 
     final backgroundBottomColor = isDark
         ? _darkBackgroundBottomColor
-        : _lightPrimaryColor.withOpacity(0.30);
+        : _lightPrimaryColor.withValues(alpha: 0.30);
 
     final backgroundTopColor = isDark
         ? _darkBackgroundTopColor
-        : _lightPrimaryColor.withOpacity(0.0);
+        : _lightPrimaryColor.withValues(alpha: 0.0);
 
     return Container(
       width: double.infinity,
@@ -79,7 +79,7 @@ class _StaticChartBar extends StatelessWidget {
 
     final barColor = isDark
         ? _darkForegroundColor
-        : _lightPrimaryColor.withOpacity(0.65);
+        : _lightPrimaryColor.withValues(alpha: 0.65);
 
     return Expanded(
       child: Padding(
@@ -114,7 +114,7 @@ class _CategoryIcon extends StatelessWidget {
 
     final iconColor = isDark
         ? _darkForegroundColor
-        : _lightPrimaryColor.withOpacity(0.7);
+        : _lightPrimaryColor.withValues(alpha: 0.7);
 
     return Expanded(
       child: Padding(

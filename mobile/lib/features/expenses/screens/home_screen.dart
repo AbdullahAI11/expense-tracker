@@ -5,6 +5,8 @@ import 'package:expense_tracker/features/expenses/screens/add_expense_screen.dar
 
 import 'package:expense_tracker/features/expenses/widgets/spending_chart.dart';
 
+import 'package:expense_tracker/features/expenses/widgets/expense_list.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -41,8 +43,22 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: const Padding(
-        padding: EdgeInsets.only(top: 16, left: 16, right: 16),
-        child: SpendingChart(),
+        padding: EdgeInsets.only(
+          top: 16,
+          left: 16,
+          right: 16,
+        ),
+        child: Column(
+          children: [
+            SpendingChart(),
+            SizedBox(height: 30),
+            Expanded(
+              child: ExpenseList(
+                expenses: [],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

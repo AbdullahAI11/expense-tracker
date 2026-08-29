@@ -1,6 +1,26 @@
 @ExpenseTracker.Api_HostAddress = http://localhost:5063
+@expenseIdToDelete = 1
 
-GET {{ExpenseTracker.Api_HostAddress}}/weatherforecast/
+GET {{ExpenseTracker.Api_HostAddress}}/api/Expenses
+Accept: application/json
+
+###
+
+POST {{ExpenseTracker.Api_HostAddress}}/api/Expenses
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Lunch",
+  "amount": 24.50,
+  "expenseDate": "2025-01-15",
+  "categoryCode": "food"
+}
+
+###
+
+# Replace expenseIdToDelete with the ID of an existing expense.
+DELETE {{ExpenseTracker.Api_HostAddress}}/api/Expenses/{{expenseIdToDelete}}
 Accept: application/json
 
 ###

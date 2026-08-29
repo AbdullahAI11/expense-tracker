@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/expenses/screens/add_expense_screen.dar
 import 'package:expense_tracker/features/expenses/state/expenses_controller.dart';
 import 'package:expense_tracker/features/expenses/widgets/home_screen/expense_list.dart';
 import 'package:expense_tracker/features/expenses/widgets/home_screen/spending_chart.dart';
+import 'package:expense_tracker/features/expenses/data/api/expense_api_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,8 +16,18 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _expensesController = ExpensesController();
+  @override
+  void initState() {
+    super.initState();
 
+    _expensesController.loadExpenses();
+  }
+
+  final _expensesController = ExpensesController(
+    const ExpenseApiService(
+      baseUrl: 'http://10.0.2.2:5063',
+    ),
+  );
   @override
   void dispose() {
     _expensesController.dispose();

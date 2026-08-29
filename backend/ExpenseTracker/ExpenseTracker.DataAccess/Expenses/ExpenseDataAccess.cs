@@ -1,6 +1,7 @@
 ﻿using ExpenseTracker.DataAccess.Database;
 using ExpenseTracker.Shared.Models;
 using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace ExpenseTracker.DataAccess.Expenses;
 
@@ -54,5 +55,86 @@ public sealed class ExpenseDataAccess
         }
 
         return expenses;
+    }
+
+    public async Task<Expense> CreateExpenseAsync(
+    string title,
+    decimal amount,
+    DateOnly expenseDate,
+    string categoryCode
+)
+    {
+        const string query = """
+        INSERT INTO dbo.Expenses
+        (
+            Title,
+            Amount,
+            ExpenseDate,
+            CategoryCode
+        )
+        OUTPUT INSERTED.ExpenseId
+        VALUES
+        (
+            @Title,
+            @Amount,
+            @ExpenseDate,
+            @CategoryCode
+        );
+        """;
+
+        await using SqlConnection connection =
+            _connectionFactory.CreateConnection();
+
+        await connection.OpenAsync();
+
+        await using SqlCommand command =
+            new SqlCommand(query, connection);
+
+        command.Parameters.Add(
+            "@Title",
+            SqlDbType.NVarChar,
+            50
+        ).Value = title;
+
+        var amountParameter =
+            command.Parameters.Add(
+                "@Amount",
+                SqlDbType.Decimal
+            );
+
+        amountParameter.Precision = 19;
+        amountParameter.Scale = 2;
+        amountParameter.Value = amount;
+
+        command.Parameters.Add(
+            "@ExpenseDate",
+            SqlDbType.Date
+        ).Value = expenseDate.ToDateTime(TimeOnly.MinValue);
+
+        command.Parameters.Add(
+            "@CategoryCode",
+            SqlDbType.VarChar,
+            10
+        ).Value = categoryCode;
+
+        var result = await command.ExecuteScalarAsync();
+
+        if (result is null || result == DBNull.Value)
+        {
+            throw new InvalidOperationException(
+                "Failed to create the expense."
+            );
+        }
+
+        var expenseId = Convert.ToInt32(result);
+
+        return new Expense
+        {
+            ExpenseId = expenseId,
+            Title = title,
+            Amount = amount,
+            ExpenseDate = expenseDate,
+            CategoryCode = categoryCode,
+        };
     }
 }

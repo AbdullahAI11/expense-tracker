@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>a21e3d3a-650a-4f64-a78f-13ac81fbe028</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ExpenseTracker.Business\ExpenseTracker.Business.csproj" />
+    <ProjectReference Include="..\ExpenseTracker.DataAccess\ExpenseTracker.DataAccess.csproj" />
+    <ProjectReference Include="..\ExpenseTracker.Shared\ExpenseTracker.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

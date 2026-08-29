@@ -43,6 +43,10 @@ class ExpensesController extends ChangeNotifier {
     addExpense(response.toExpense());
   }
 
+  Future<void> deleteExpense(int expenseId) async {
+    await _expenseApiService.deleteExpense(expenseId);
+  }
+
   void addExpense(Expense expense) {
     _expenses.add(expense);
     notifyListeners();

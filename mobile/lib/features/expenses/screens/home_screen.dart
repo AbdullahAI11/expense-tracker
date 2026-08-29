@@ -44,11 +44,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _deleteExpense(Expense expense, int index) {
+  Future<void> _deleteExpense(Expense expense, int index) async {
     final removedExpense = _expensesController.removeExpenseAt(index);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    final snackBarController = ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: isDark
             ? const Color(0xFF1E1E1E)
@@ -69,6 +69,44 @@ class _HomeScreenState extends State<HomeScreen> {
           onPressed: () {
             _expensesController.insertExpense(index, removedExpense);
           },
+        ),
+      ),
+    );
+
+    final closeReason = await snackBarController.closed;
+
+    if (closeReason == SnackBarClosedReason.action) {
+      return;
+    }
+
+    final expenseId = removedExpense.expenseId;
+    if (expenseId != null && expenseId > 0) {
+      try {
+        await _expensesController.deleteExpense(expenseId);
+        return;
+      } catch (_) {
+        // Restore the local state below when the backend deletion fails.
+      }
+    }
+
+    _expensesController.insertExpense(index, removedExpense);
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: isDark
+            ? const Color(0xFF1E1E1E)
+            : const Color(0xFF17004A),
+        content: const Text(
+          'Failed to delete expense. It was restored.',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );

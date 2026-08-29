@@ -55,4 +55,16 @@ class ExpenseApiService {
         )
         .toList();
   }
+
+  Future<void> deleteExpense(int expenseId) async {
+    final uri = Uri.parse('$baseUrl/api/Expenses/$expenseId');
+
+    final response = await http.delete(uri);
+
+    if (response.statusCode != 204) {
+      throw Exception(
+        'Failed to delete expense. Status code: ${response.statusCode}',
+      );
+    }
+  }
 }

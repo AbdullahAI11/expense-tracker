@@ -35,15 +35,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _addExpense() async {
-    final expense = await Navigator.of(context).push<Expense>(
+    await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) => const AddExpenseScreen(),
+        builder: (_) => AddExpenseScreen(
+          expensesController: _expensesController,
+        ),
       ),
     );
-
-    if (expense != null) {
-      _expensesController.addExpense(expense);
-    }
   }
 
   void _deleteExpense(Expense expense, int index) {

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:expense_tracker/features/expenses/data/api/expense_api_service.dart';
+import 'package:expense_tracker/features/expenses/data/requests/create_expense_request.dart';
 import 'package:expense_tracker/features/expenses/models/expense.dart';
 
 class ExpensesController extends ChangeNotifier {
@@ -22,6 +23,24 @@ class ExpensesController extends ChangeNotifier {
       );
 
     notifyListeners();
+  }
+
+  Future<void> createExpense({
+    required String title,
+    required double amount,
+    required DateTime expenseDate,
+    required String categoryCode,
+  }) async {
+    final response = await _expenseApiService.createExpense(
+      CreateExpenseRequest(
+        title: title,
+        amount: amount,
+        expenseDate: expenseDate,
+        categoryCode: categoryCode,
+      ),
+    );
+
+    addExpense(response.toExpense());
   }
 
   void addExpense(Expense expense) {

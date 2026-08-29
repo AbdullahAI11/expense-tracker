@@ -1,35 +1,28 @@
 # Expense Tracker
 
-## Project Overview
+A full-stack mobile application for recording and managing personal expenses.
 
-Expense Tracker is a full-stack mobile application for recording and managing
-personal expenses. It demonstrates an end-to-end architecture spanning a
-Flutter client, an ASP.NET Core Web API, a lightweight business and data-access
-layer, and persistent SQL Server storage.
+The project demonstrates a complete flow from a Flutter mobile client to an ASP.NET Core Web API, through ADO.NET, with persistent storage in SQL Server.
 
-The project deliberately keeps its scope and abstractions small so the complete
-request flow remains easy to understand.
+## Features
 
-## Key Features
-
-- Loads persisted expenses from SQL Server through the API.
-- Creates validated expenses and immediately updates the local list and chart.
-- Prevents duplicate create submissions while a request is in progress.
-- Orders expenses by newest date, then highest expense ID for equal dates.
-- Deletes expenses with a four-second Undo window before permanent deletion.
-- Restores an expense locally if the delete request fails.
-- Displays category icons and a category-based spending chart.
-- Supports the fixed categories Food, Travel, Leisure, and Work.
-- Follows the operating system's light or dark appearance.
-- Shows initial loading, error, empty, and retry states on Home.
+- View expenses stored in SQL Server.
+- Create new expenses with validation.
+- Delete expenses with a 4-second Undo option.
+- Restore expenses locally if deletion fails.
+- Prevent duplicate submissions while creating an expense.
+- Sort expenses by newest date, then expense ID.
+- Display spending by category.
+- Support light and dark themes.
+- Handle loading, error, empty, and retry states.
 
 ## Tech Stack
 
-| Area | Technology |
+| Layer | Technology |
 | --- | --- |
-| Mobile | Flutter, Dart (Android and iOS) |
+| Mobile | Flutter, Dart |
 | Backend | C#, ASP.NET Core Web API, .NET 8 |
-| Data access | ADO.NET, Microsoft.Data.SqlClient |
+| Data Access | ADO.NET, Microsoft.Data.SqlClient |
 | Database | SQL Server |
 
 ## Architecture
@@ -50,126 +43,96 @@ Data Access Layer
     SQL Server
 ```
 
-The Flutter client uses a lightweight feature-first structure with UI, feature
-state, API request/response types, and app models separated by responsibility.
-API responses are mapped into the model consumed by the expense UI.
+The Flutter application uses a lightweight feature-first structure.
 
-The backend uses a small layered structure: the API handles HTTP concerns, the
-business layer applies validation, and the data-access layer executes
-parameterized SQL through ADO.NET. ADO.NET is an intentional choice instead of
-EF Core. This is not full Clean Architecture; the project avoids repository,
-use-case, and domain layers that its current scope does not require.
+The backend separates HTTP handling, business validation, and database access into small dedicated projects. ADO.NET is used intentionally instead of an ORM such as EF Core.
 
-## API Endpoints
+## API
 
-| Method | Endpoint | Successful response | Other implemented responses |
-| --- | --- | --- | --- |
-| `GET` | `/api/Expenses` | `200 OK` with the expense list | — |
-| `POST` | `/api/Expenses` | `201 Created` with the created expense | `400 Bad Request` for invalid expense data |
-| `DELETE` | `/api/Expenses/{expenseId}` | `204 No Content` | `400 Bad Request` for a non-positive ID; `404 Not Found` when no expense has that ID |
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/Expenses` | Get all expenses |
+| `POST` | `/api/Expenses` | Create an expense |
+| `DELETE` | `/api/Expenses/{expenseId}` | Delete an expense |
 
-Example create request:
+Example:
 
-```http
-POST /api/Expenses
-Content-Type: application/json
-
+```json
 {
   "title": "Lunch",
   "amount": 24.50,
-  "expenseDate": "2025-01-15",
+  "expenseDate": "2026-08-29",
   "categoryCode": "food"
 }
 ```
 
-The development request collection is available in
-[`ExpenseTracker.Api.http`](backend/ExpenseTracker/ExpenseTracker.Api/ExpenseTracker.Api.http).
+Supported categories:
+
+- `food`
+- `travel`
+- `leisure`
+- `work`
 
 ## Database
 
-The initialization script creates SQL Server database `ExpenseTracker` and its
-`dbo.Expenses` table.
+The project uses a single `dbo.Expenses` table:
 
-| Column | Definition |
+| Column | Type |
 | --- | --- |
-| `ExpenseId` | `INT IDENTITY(1,1) NOT NULL`, primary key |
-| `Title` | `NVARCHAR(50) NOT NULL` |
-| `Amount` | `DECIMAL(19,2) NOT NULL` |
-| `ExpenseDate` | `DATE NOT NULL` |
-| `CategoryCode` | `VARCHAR(10) NOT NULL` |
+| `ExpenseId` | `INT IDENTITY` |
+| `Title` | `NVARCHAR(50)` |
+| `Amount` | `DECIMAL(19,2)` |
+| `ExpenseDate` | `DATE` |
+| `CategoryCode` | `VARCHAR(10)` |
 
-The schema also enforces a nonblank trimmed title, a positive amount, and a
-category code of `food`, `travel`, `leisure`, or `work`.
+The database also enforces valid titles, positive amounts, and supported category codes.
 
-## Delete and Undo Design
+Schema:
 
 ```text
-Swipe → remove locally → show Undo for 4 seconds
-                         ├─ Undo: restore locally; do not call the API
-                         └─ Timeout/dismiss: call DELETE and remove from SQL Server
+database/001_initial_schema.sql
 ```
 
-Waiting to call the API until the Undo window closes avoids deleting a database
-row and recreating it with a different identity ID. If permanent deletion fails,
-the client restores the original expense and shows an error.
-
-## Repository Structure
+## Project Structure
 
 ```text
 expense-tracker/
-├── mobile/                         # Flutter application
+├── mobile/
 ├── backend/ExpenseTracker/
-│   ├── ExpenseTracker.Api/         # HTTP endpoints and API configuration
-│   ├── ExpenseTracker.Business/    # Validation and application logic
-│   ├── ExpenseTracker.DataAccess/  # Parameterized ADO.NET operations
-│   └── ExpenseTracker.Shared/      # Shared backend expense model
-├── database/                       # SQL Server initialization script
-└── design_refs/                    # Light, dark, and add-expense references
+│   ├── ExpenseTracker.Api/
+│   ├── ExpenseTracker.Business/
+│   ├── ExpenseTracker.DataAccess/
+│   └── ExpenseTracker.Shared/
+└── database/
 ```
-
-## Screenshots
-
-<table>
-  <tr>
-    <th>Home — Light</th>
-    <th>Home — Dark</th>
-    <th>Add Expense</th>
-  </tr>
-  <tr>
-    <td><img src="design_refs/home.png" alt="Expense Tracker Home in light mode" width="240"></td>
-    <td><img src="design_refs/home_dark.png" alt="Expense Tracker Home in dark mode" width="240"></td>
-    <td><img src="design_refs/add_expense.png" alt="Expense Tracker Add Expense form" width="240"></td>
-  </tr>
-</table>
 
 ## Running Locally
 
-Prerequisites: Flutter, the .NET 8 SDK, and a local SQL Server instance.
+### Database
 
-### 1. Database
+Run:
 
-Execute [`database/001_initial_schema.sql`](database/001_initial_schema.sql) in
-SQL Server. The script creates the `ExpenseTracker` database and
-`dbo.Expenses` table.
+```text
+database/001_initial_schema.sql
+```
 
-### 2. Backend
+against a local SQL Server instance.
 
-Configure the connection string with .NET User Secrets. The following example
-uses local Windows integrated authentication and contains no password:
+### Backend
+
+Configure the connection string using .NET User Secrets:
 
 ```bash
 dotnet user-secrets set "ConnectionStrings:ExpenseTracker" "Server=localhost;Database=ExpenseTracker;Integrated Security=True;TrustServerCertificate=True;" --project backend/ExpenseTracker/ExpenseTracker.Api/ExpenseTracker.Api.csproj
 ```
 
-Run the API's HTTP development profile:
+Run the API:
 
 ```bash
 dotnet run --project backend/ExpenseTracker/ExpenseTracker.Api/ExpenseTracker.Api.csproj --launch-profile http
 ```
 
-This profile listens on `http://localhost:5063`.
-
-### 3. Flutter
+### Flutter
 
 From the `mobile/` directory:
 
@@ -178,40 +141,24 @@ flutter pub get
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5063
 ```
 
-Android emulators use `10.0.2.2` to reach the host computer's loopback
-interface. `API_BASE_URL` has that address as its development default and can be
-overridden with `--dart-define` for another simulator, device, or API host.
+`10.0.2.2` allows an Android emulator to access the host computer.
 
 ## Validation
-
-Run mobile checks from `mobile/`:
 
 ```bash
 flutter analyze
 flutter test
-```
-
-Run backend and repository checks from the repository root:
-
-```bash
 dotnet build backend/ExpenseTracker/ExpenseTracker.sln
-git diff --check
 ```
 
-The repository does not currently define a CI/CD pipeline.
+## Scope
 
-## Scope and Design Decisions
+This project intentionally keeps its scope small and the architecture lightweight.
 
-- Expense amounts are presented in Saudi riyals (`SAR`).
-- Categories are currently fixed to Food, Travel, Leisure, and Work.
-- Authentication and multiple-user ownership are not implemented.
-- Expense editing (`PUT`/`PATCH`) is not implemented.
-- ADO.NET is intentionally used instead of EF Core.
-- The architecture stays lightweight and grows only with demonstrated needs.
+Currently:
 
-## Future Improvements
-
-- Add expense editing.
-- Add authentication and per-user expense ownership.
-- Expand automated coverage for mobile and backend behavior.
-- Add deployment and production API configuration.
+- Currency is Saudi Riyal (`SAR`).
+- Categories are fixed.
+- Authentication is not implemented.
+- Expense editing is not implemented.
+- ADO.NET is used instead of EF Core.

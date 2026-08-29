@@ -137,4 +137,29 @@ public sealed class ExpenseDataAccess
             CategoryCode = categoryCode,
         };
     }
+
+    public async Task<bool> DeleteExpenseAsync(int expenseId)
+    {
+        const string query = """
+        DELETE FROM dbo.Expenses
+        WHERE ExpenseId = @ExpenseId;
+        """;
+
+        await using SqlConnection connection =
+            _connectionFactory.CreateConnection();
+
+        await connection.OpenAsync();
+
+        await using SqlCommand command =
+            new SqlCommand(query, connection);
+
+        command.Parameters.Add(
+            "@ExpenseId",
+            SqlDbType.Int
+        ).Value = expenseId;
+
+        var affectedRows = await command.ExecuteNonQueryAsync();
+
+        return affectedRows > 0;
+    }
 }

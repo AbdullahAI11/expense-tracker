@@ -53,4 +53,34 @@ public sealed class ExpensesController : ControllerBase
             );
         }
     }
+    [HttpDelete("{expenseId:int}")]
+    public async Task<IActionResult> DeleteExpense(int expenseId)
+    {
+        try
+        {
+            var deleted =
+                await _expenseService.DeleteExpenseAsync(expenseId);
+
+            if (!deleted)
+            {
+                return NotFound(
+                    new
+                    {
+                        message = "Expense was not found."
+                    }
+                );
+            }
+
+            return NoContent();
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(
+                new
+                {
+                    message = exception.Message
+                }
+            );
+        }
+    }
 }

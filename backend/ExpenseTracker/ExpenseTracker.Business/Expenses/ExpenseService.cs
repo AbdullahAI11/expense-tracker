@@ -86,4 +86,16 @@ public sealed class ExpenseService
             categoryCode
         );
     }
+
+    public async Task<bool> DeleteExpenseAsync(int expenseId)
+    {
+        if (expenseId <= 0)
+        {
+            throw new ArgumentException(
+                "Expense ID must be greater than zero."
+            );
+        }
+
+        return await _expenseDataAccess.DeleteExpenseAsync(expenseId);
+    }
 }

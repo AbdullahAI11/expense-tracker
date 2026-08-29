@@ -10,19 +10,32 @@ class ExpensesController extends ChangeNotifier {
   final ExpenseApiService _expenseApiService;
 
   final List<Expense> _expenses = [];
+  bool _isLoading = false;
+  String? _loadErrorMessage;
 
   List<Expense> get expenses => List.unmodifiable(_expenses);
+  bool get isLoading => _isLoading;
+  String? get loadErrorMessage => _loadErrorMessage;
 
   Future<void> loadExpenses() async {
-    final responses = await _expenseApiService.getAllExpenses();
-
-    _expenses
-      ..clear()
-      ..addAll(
-        responses.map((response) => response.toExpense()),
-      );
-
+    _isLoading = true;
+    _loadErrorMessage = null;
     notifyListeners();
+
+    try {
+      final responses = await _expenseApiService.getAllExpenses();
+
+      _expenses
+        ..clear()
+        ..addAll(
+          responses.map((response) => response.toExpense()),
+        );
+    } catch (_) {
+      _loadErrorMessage = 'Unable to load expenses. Please try again.';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> createExpense({
@@ -49,6 +62,7 @@ class ExpensesController extends ChangeNotifier {
 
   void addExpense(Expense expense) {
     _expenses.add(expense);
+    _sortExpenses();
     notifyListeners();
   }
 
@@ -66,6 +80,18 @@ class ExpensesController extends ChangeNotifier {
         : index;
 
     _expenses.insert(insertionIndex, expense);
+    _sortExpenses();
     notifyListeners();
+  }
+
+  void _sortExpenses() {
+    _expenses.sort((first, second) {
+      final dateComparison = second.date.compareTo(first.date);
+      if (dateComparison != 0) {
+        return dateComparison;
+      }
+
+      return (second.expenseId ?? -1).compareTo(first.expenseId ?? -1);
+    });
   }
 }

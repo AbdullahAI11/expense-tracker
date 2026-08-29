@@ -11,7 +11,7 @@ class FormActions extends StatelessWidget {
   });
 
   final VoidCallback onCancel;
-  final VoidCallback onSave;
+  final VoidCallback? onSave;
 
   @override
   Widget build(BuildContext context) {

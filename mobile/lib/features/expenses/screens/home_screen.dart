@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:expense_tracker/core/network/api_config.dart';
 import 'package:expense_tracker/features/expenses/models/expense.dart';
 import 'package:expense_tracker/features/expenses/screens/add_expense_screen.dart';
 import 'package:expense_tracker/features/expenses/state/expenses_controller.dart';
@@ -25,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final _expensesController = ExpensesController(
     const ExpenseApiService(
-      baseUrl: 'http://10.0.2.2:5063',
+      baseUrl: ApiConfig.apiBaseUrl,
     ),
   );
   @override
@@ -134,13 +135,22 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: _addExpense,
-            icon: const Icon(
-              Icons.add,
-              color: Colors.white,
-              size: 28,
-            ),
+          ListenableBuilder(
+            listenable: _expensesController,
+            builder: (context, child) {
+              final canAddExpense =
+                  !_expensesController.isLoading &&
+                  _expensesController.loadErrorMessage == null;
+
+              return IconButton(
+                onPressed: canAddExpense ? _addExpense : null,
+                icon: Icon(
+                  Icons.add,
+                  color: canAddExpense ? Colors.white : Colors.white38,
+                  size: 28,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -153,6 +163,32 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListenableBuilder(
           listenable: _expensesController,
           builder: (context, child) {
+            if (_expensesController.isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            final loadErrorMessage = _expensesController.loadErrorMessage;
+            if (loadErrorMessage != null) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      loadErrorMessage,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: _expensesController.loadExpenses,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
             final expenses = _expensesController.expenses;
 
             return Column(

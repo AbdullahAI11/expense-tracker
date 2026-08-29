@@ -14,7 +14,7 @@ class AddExpenseForm extends StatefulWidget {
     required this.onCancel,
   });
 
-  final ValueChanged<Expense> onSubmit;
+  final Future<void> Function(Expense) onSubmit;
   final VoidCallback onCancel;
 
   @override
@@ -29,6 +29,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
   final _amountFocusNode = FocusNode();
 
   bool _hasTriedToSubmit = false;
+  bool _isSubmitting = false;
   DateTime? _selectedDate;
   String _selectedCategory = 'leisure';
 
@@ -73,7 +74,11 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
     return null;
   }
 
-  void _submit() {
+  Future<void> _submit() async {
+    if (_isSubmitting) {
+      return;
+    }
+
     setState(() {
       _hasTriedToSubmit = true;
     });
@@ -89,7 +94,19 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
       category: _selectedCategory,
     );
 
-    widget.onSubmit(expense);
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await widget.onSubmit(expense);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -148,7 +165,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
               const Spacer(),
               FormActions(
                 onCancel: widget.onCancel,
-                onSave: _submit,
+                onSave: _isSubmitting ? null : _submit,
               ),
             ],
           ),
